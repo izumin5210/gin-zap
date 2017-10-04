@@ -38,6 +38,7 @@ func New(logger *zap.Logger) gin.HandlerFunc {
 				zap.Time("time", requestedAt),
 				zap.Duration("latency", latency),
 				zapFieldStringsByStringMap("header", c.Request.Header),
+				zapFieldStringsByStringMap("query", c.Request.URL.Query()),
 			}
 			logger.Info(fmt.Sprintf("%s %s", c.Request.Method, path), fields...)
 		}
