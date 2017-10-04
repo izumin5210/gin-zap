@@ -29,8 +29,7 @@ func New(logger *zap.Logger) gin.HandlerFunc {
 				logger.Error(errMsg)
 			}
 		} else {
-			logger.Info(
-				fmt.Sprintf("%s %s", c.Request.Method, path),
+			fields := []zapcore.Field{
 				zap.Int("status", c.Writer.Status()),
 				zap.String("method", c.Request.Method),
 				zap.String("path", path),
@@ -38,21 +37,9 @@ func New(logger *zap.Logger) gin.HandlerFunc {
 				zap.String("user-agent", c.Request.UserAgent()),
 				zap.Time("time", requestedAt),
 				zap.Duration("latency", latency),
-				zap.Object("headers", zapcore.ObjectMarshalerFunc(func(inner zapcore.ObjectEncoder) error {
-					for k, values := range c.Request.Header {
-						err := inner.AddArray(k, zapcore.ArrayMarshalerFunc(func(inner zapcore.ArrayEncoder) error {
-							for _, v := range values {
-								inner.AppendString(v)
-							}
-							return nil
-						}))
-						if err != nil {
-							return err
-						}
-					}
-					return nil
-				})),
-			)
+				zapFieldStringsByStringMap("header", c.Request.Header),
+			}
+			logger.Info(fmt.Sprintf("%s %s", c.Request.Method, path), fields...)
 		}
 	}
 }
