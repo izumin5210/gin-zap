@@ -24,23 +24,23 @@ func New(logger *zap.Logger) gin.HandlerFunc {
 
 		latency := time.Since(requestedAt)
 
+		fields := []zapcore.Field{
+			zap.Int("status", c.Writer.Status()),
+			zap.String("method", c.Request.Method),
+			zap.String("path", path),
+			zap.String("ip", c.ClientIP()),
+			zap.String("user-agent", c.Request.UserAgent()),
+			zap.Time("time", requestedAt),
+			zap.Duration("latency", latency),
+			zapFieldStringsByStringMap("header", c.Request.Header),
+			zapFieldStringsByStringMap("query", c.Request.URL.Query()),
+		}
+		logger.Info(fmt.Sprintf("%s %s", c.Request.Method, path), fields...)
+
 		if len(c.Errors) > 0 {
 			for _, errMsg := range c.Errors.Errors() {
 				logger.Error(errMsg)
 			}
-		} else {
-			fields := []zapcore.Field{
-				zap.Int("status", c.Writer.Status()),
-				zap.String("method", c.Request.Method),
-				zap.String("path", path),
-				zap.String("ip", c.ClientIP()),
-				zap.String("user-agent", c.Request.UserAgent()),
-				zap.Time("time", requestedAt),
-				zap.Duration("latency", latency),
-				zapFieldStringsByStringMap("header", c.Request.Header),
-				zapFieldStringsByStringMap("query", c.Request.URL.Query()),
-			}
-			logger.Info(fmt.Sprintf("%s %s", c.Request.Method, path), fields...)
 		}
 	}
 }
